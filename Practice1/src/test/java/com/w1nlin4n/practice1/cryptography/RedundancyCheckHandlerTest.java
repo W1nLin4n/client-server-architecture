@@ -9,7 +9,7 @@ class RedundancyCheckHandlerTest {
     void encoding_validation_empty() {
         byte[] bytes = {};
         short crc = RedundancyCheckHandler.encode(bytes);
-        assertEquals(crc, 0);
+        assertEquals((short) 0, crc);
         assertTrue(RedundancyCheckHandler.validate(bytes, crc));
     }
 
@@ -17,7 +17,7 @@ class RedundancyCheckHandlerTest {
     void encoding_validation_not_empty() {
         byte[] bytes = {(byte) 0xFF, (byte) 0xAA, 0x45, 0x7A};
         short crc = RedundancyCheckHandler.encode(bytes);
-        assertEquals(crc, 0x47A3);
+        assertEquals((short) 0x47A3, crc);
         assertTrue(RedundancyCheckHandler.validate(bytes, crc));
     }
 }
