@@ -1,24 +1,30 @@
 package com.w1nlin4n.homework2.serialization;
 
+import com.w1nlin4n.homework2.cryptography.CryptographyHandler;
 import com.w1nlin4n.homework2.cryptography.RedundancyCheckHandler;
 import com.w1nlin4n.homework2.exceptions.SerializationException;
 import com.w1nlin4n.homework2.networking.message.Message;
 import com.w1nlin4n.homework2.networking.packet.Packet;
+import lombok.AllArgsConstructor;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 
+@AllArgsConstructor
 public class DefaultPacketDeserializer implements Deserializer<Packet> {
+    private final CryptographyHandler cryptographyHandler;
+    private final RedundancyCheckHandler redundancyCheckHandler;
+
     @Override
     public Packet deserialize(byte[] obj) {
-        Deserializer<Message> messageDeserializer = new DefaultMessageDeserializer();
+        Deserializer<Message> messageDeserializer = new DefaultMessageDeserializer(cryptographyHandler, redundancyCheckHandler);
 
         byte[] packetBytes = Arrays.copyOfRange(obj, 0, 14);
         short crc = ByteBuffer.wrap(Arrays.copyOfRange(obj, 14, 16)).order(ByteOrder.BIG_ENDIAN).getShort();
         byte[] messageBytes = Arrays.copyOfRange(obj, 16, obj.length);
 
-        if(!RedundancyCheckHandler.validate(packetBytes, crc))
+        if(!redundancyCheckHandler.validate(packetBytes, crc))
             throw new SerializationException("Packet crc check failed", null);
 
         byte magicConst = ByteBuffer.wrap(Arrays.copyOfRange(packetBytes, 0, 1)).order(ByteOrder.BIG_ENDIAN).get();
