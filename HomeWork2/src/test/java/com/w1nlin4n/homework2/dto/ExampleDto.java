@@ -10,10 +10,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExampleDto {
-    String name;
-    int age;
-    int[] grades;
-    ExampleDto teacher;
+    private String name;
+    private int age;
+    private int[] grades;
+    private ExampleDto teacher;
 
     public String toJson() throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
