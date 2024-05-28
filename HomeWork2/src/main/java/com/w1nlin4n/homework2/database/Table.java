@@ -27,6 +27,9 @@ public class Table {
     }
 
     public Row getRow(Object id) {
+        if(!rows.containsKey(id)) {
+            throw new DatabaseException("Primary key not found", null);
+        }
         return rows.get(id);
     }
 
