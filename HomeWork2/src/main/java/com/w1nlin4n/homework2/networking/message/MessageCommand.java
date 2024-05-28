@@ -1,6 +1,7 @@
 package com.w1nlin4n.homework2.networking.message;
 
 public enum MessageCommand {
+    INFORMATION,
     GET_PRODUCT_AMOUNT,
     REMOVE_PRODUCT_AMOUNT,
     ADD_PRODUCT_AMOUNT,
