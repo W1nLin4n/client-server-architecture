@@ -3,6 +3,7 @@ package com.w1nlin4n.homework2.database;
 
 import com.w1nlin4n.homework2.entities.Category;
 import com.w1nlin4n.homework2.entities.Product;
+import lombok.Synchronized;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +18,7 @@ public class ProductsDB extends Database {
         createTable("product_category");
     }
 
+    @Synchronized
     public void createCategory(Category category) {
         Table table = getTable("category");
         HashMap<String, Object> values = new HashMap<>();
@@ -26,6 +28,7 @@ public class ProductsDB extends Database {
         table.insertRow(row);
     }
 
+    @Synchronized
     public Category getCategory(String categoryName) {
         Table table = getTable("category");
         Row row = table.getRow(categoryName);
@@ -37,6 +40,7 @@ public class ProductsDB extends Database {
                 .build();
     }
 
+    @Synchronized
     public void updateCategory(Category category) {
         Table table = getTable("category");
         HashMap<String, Object> values = new HashMap<>();
@@ -46,6 +50,7 @@ public class ProductsDB extends Database {
         table.updateRow(row);
     }
 
+    @Synchronized
     public void deleteCategory(String categoryName) {
         Table table = getTable("category");
         table.deleteRow(categoryName);
@@ -55,6 +60,7 @@ public class ProductsDB extends Database {
         }
     }
 
+    @Synchronized
     public List<Category> getAllCategories() {
         Table table = getTable("category");
         List<Category> categories = new ArrayList<>();
@@ -69,6 +75,7 @@ public class ProductsDB extends Database {
         return categories;
     }
 
+    @Synchronized
     public void createProduct(Product product) {
         Table table = getTable("product");
         HashMap<String, Object> values = new HashMap<>();
@@ -81,6 +88,7 @@ public class ProductsDB extends Database {
         table.insertRow(row);
     }
 
+    @Synchronized
     public Product getProduct(String productName) {
         Table table = getTable("product");
         Row row = table.getRow(productName);
@@ -95,6 +103,7 @@ public class ProductsDB extends Database {
                 .build();
     }
 
+    @Synchronized
     public void updateProduct(Product product) {
         Table table = getTable("product");
         HashMap<String, Object> values = new HashMap<>();
@@ -107,6 +116,7 @@ public class ProductsDB extends Database {
         table.updateRow(row);
     }
 
+    @Synchronized
     public void deleteProduct(String productName) {
         Table table = getTable("product");
         table.deleteRow(productName);
@@ -114,6 +124,7 @@ public class ProductsDB extends Database {
         product_category.deleteRow(productName);
     }
 
+    @Synchronized
     public List<Product> getAllProducts() {
         Table table = getTable("product");
         List<Product> products = new ArrayList<>();
@@ -131,6 +142,7 @@ public class ProductsDB extends Database {
         return products;
     }
 
+    @Synchronized
     public void addProductToCategory(String productName, String categoryName) {
         Table table = getTable("product_category");
         HashMap<String, Object> values = new HashMap<>();
@@ -140,6 +152,7 @@ public class ProductsDB extends Database {
         table.insertRow(row);
     }
 
+    @Synchronized
     public List<Product> getAllProductsFromCategory(String categoryName) {
         Table table = getTable("product_category");
         List<Product> products = new ArrayList<>();
