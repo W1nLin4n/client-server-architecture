@@ -62,7 +62,7 @@ class ProductsDBTest {
         productsDB.deleteCategory("Drinks");
         assertThrows(DatabaseException.class, () -> productsDB.getCategory("Drinks"));
         assertThrows(DatabaseException.class, () -> productsDB.getProduct("Wine"));
-        assertEquals(productsDB.getAllProductsFromCategory("Drinks"), new ArrayList<Product>());
+        assertEquals(new ArrayList<Product>(), productsDB.getAllProductsFromCategory("Drinks"));
     }
 
     @Test
