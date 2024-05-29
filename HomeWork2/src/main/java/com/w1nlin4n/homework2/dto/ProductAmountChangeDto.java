@@ -1,12 +1,10 @@
 package com.w1nlin4n.homework2.dto;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.*;
 
 @Data
-@ToString
-@EqualsAndHashCode
+@AllArgsConstructor
+@Builder
 public class ProductAmountChangeDto {
     private String productName;
     private Integer productAmount;
