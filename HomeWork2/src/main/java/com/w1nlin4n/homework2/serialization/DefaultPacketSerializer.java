@@ -11,7 +11,7 @@ import java.nio.ByteOrder;
 
 @AllArgsConstructor
 public class DefaultPacketSerializer implements Serializer<Packet> {
-    protected static byte magicConst = 0x13;
+    protected static final byte magicConst = 0x13;
 
     private final CryptographyHandler cryptographyHandler;
     private final RedundancyCheckHandler redundancyCheckHandler;
