@@ -6,6 +6,7 @@ import com.w1nlin4n.homework2.cryptography.CryptographyHandler;
 import com.w1nlin4n.homework2.cryptography.RedundancyCheckHandler;
 import com.w1nlin4n.homework2.dto.ExampleDto;
 import com.w1nlin4n.homework2.networking.message.Message;
+import com.w1nlin4n.homework2.networking.message.MessageCommand;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +29,7 @@ class DefaultMessageSerializationTest {
 
     @Test
     void empty_message_serialization() {
-        Message message = new Message(0, 0, "");
+        Message message = new Message(MessageCommand.ERROR, 0, "");
         byte[] serialized = messageSerializer.serialize(message);
         Message deserialized = messageDeserializer.deserialize(serialized);
         assertEquals(message, deserialized);
@@ -36,7 +37,7 @@ class DefaultMessageSerializationTest {
 
     @Test
     void not_empty_message_serialization() {
-        Message message = new Message(23, 993, "Hello World!");
+        Message message = new Message(MessageCommand.INFORMATION, 993, "Hello World!");
         byte[] serialized = messageSerializer.serialize(message);
         Message deserialized = messageDeserializer.deserialize(serialized);
         assertEquals(message, deserialized);
@@ -47,7 +48,7 @@ class DefaultMessageSerializationTest {
         ExampleDto teacher = new ExampleDto("Vlad", 35, null, null);
         ExampleDto student = new ExampleDto("Ivan", 14, new int[]{12, 10, 11, 12}, teacher);
 
-        Message message = new Message(23, 993, student.toJson());
+        Message message = new Message(MessageCommand.INFORMATION, 993, student.toJson());
         byte[] serialized = messageSerializer.serialize(message);
         Message deserialized = messageDeserializer.deserialize(serialized);
         assertEquals(message, deserialized);

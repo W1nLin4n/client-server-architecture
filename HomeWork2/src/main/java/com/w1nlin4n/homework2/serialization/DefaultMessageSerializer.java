@@ -24,7 +24,7 @@ public class DefaultMessageSerializer implements Serializer<Message> {
             throw new SerializationException("Serialization failed during message encryption", e);
         }
 
-        byte[] messageBytes = ByteBuffer.allocate(8 + bodyBytes.length).order(ByteOrder.BIG_ENDIAN).putInt(obj.getCommand()).putInt(obj.getUserId()).put(bodyBytes).array();
+        byte[] messageBytes = ByteBuffer.allocate(8 + bodyBytes.length).order(ByteOrder.BIG_ENDIAN).putInt(obj.getCommand().ordinal()).putInt(obj.getUserId()).put(bodyBytes).array();
         return ByteBuffer.allocate(messageBytes.length + 2).order(ByteOrder.BIG_ENDIAN).put(messageBytes).putShort(redundancyCheckHandler.encode(messageBytes)).array();
     }
 }

@@ -4,7 +4,7 @@ import lombok.Value;
 
 @Value
 public class Message {
-    int command;
+    MessageCommand command;
     int userId;
     String body;
 }

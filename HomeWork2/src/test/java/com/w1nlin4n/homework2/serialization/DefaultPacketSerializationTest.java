@@ -5,6 +5,7 @@ import com.w1nlin4n.homework2.cryptography.CryptographyHandler;
 import com.w1nlin4n.homework2.cryptography.RedundancyCheckHandler;
 import com.w1nlin4n.homework2.dto.ExampleDto;
 import com.w1nlin4n.homework2.networking.message.Message;
+import com.w1nlin4n.homework2.networking.message.MessageCommand;
 import com.w1nlin4n.homework2.networking.packet.Packet;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +29,7 @@ class DefaultPacketSerializationTest {
 
     @Test
     void empty_packet_serialization() {
-        Packet packet = new Packet((byte) 0, 0L, new Message(0, 0, ""));
+        Packet packet = new Packet((byte) 0, 0L, new Message(MessageCommand.ERROR, 0, ""));
         byte[] serialized = packetSerializer.serialize(packet);
         Packet deserialized = packetDeserializer.deserialize(serialized);
         assertEquals(packet, deserialized);
@@ -36,7 +37,7 @@ class DefaultPacketSerializationTest {
 
     @Test
     void not_empty_packet_serialization() {
-        Packet packet = new Packet((byte) 12, 1023910923L, new Message(23, 993, "Hello World!"));
+        Packet packet = new Packet((byte) 12, 1023910923L, new Message(MessageCommand.INFORMATION, 993, "Hello World!"));
         byte[] serialized = packetSerializer.serialize(packet);
         Packet deserialized = packetDeserializer.deserialize(serialized);
         assertEquals(packet, deserialized);
@@ -47,7 +48,7 @@ class DefaultPacketSerializationTest {
         ExampleDto teacher = new ExampleDto("Vlad", 35, null, null);
         ExampleDto student = new ExampleDto("Ivan", 14, new int[]{12, 10, 11, 12}, teacher);
 
-        Packet packet = new Packet((byte) 12, 1023910923L, new Message(23, 993, student.toJson()));
+        Packet packet = new Packet((byte) 12, 1023910923L, new Message(MessageCommand.INFORMATION, 993, student.toJson()));
         byte[] serialized = packetSerializer.serialize(packet);
         Packet deserialized = packetDeserializer.deserialize(serialized);
         assertEquals(packet, deserialized);

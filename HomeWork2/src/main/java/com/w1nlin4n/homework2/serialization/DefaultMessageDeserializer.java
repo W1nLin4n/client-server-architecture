@@ -4,6 +4,7 @@ import com.w1nlin4n.homework2.cryptography.CryptographyHandler;
 import com.w1nlin4n.homework2.cryptography.RedundancyCheckHandler;
 import com.w1nlin4n.homework2.exceptions.SerializationException;
 import com.w1nlin4n.homework2.networking.message.Message;
+import com.w1nlin4n.homework2.networking.message.MessageCommand;
 import lombok.AllArgsConstructor;
 
 import java.nio.ByteBuffer;
@@ -36,6 +37,6 @@ public class DefaultMessageDeserializer implements Deserializer<Message> {
         }
         String body = new String(bodyBytesDecoded, StandardCharsets.UTF_8);
 
-        return new Message(command, userId, body);
+        return new Message(MessageCommand.getCommand(command), userId, body);
     }
 }
