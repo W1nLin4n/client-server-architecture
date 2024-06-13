@@ -1,7 +1,6 @@
 package com.w1nlin4n.practice3.networking.connection;
 
 import lombok.RequiredArgsConstructor;
-import lombok.Synchronized;
 
 import java.util.ArrayDeque;
 import java.util.Queue;

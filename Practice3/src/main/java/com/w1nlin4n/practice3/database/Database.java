@@ -1,7 +1,6 @@
 package com.w1nlin4n.practice3.database;
 
 import com.w1nlin4n.practice3.exceptions.DatabaseException;
-import com.w1nlin4n.practice3.exceptions.DatabaseException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

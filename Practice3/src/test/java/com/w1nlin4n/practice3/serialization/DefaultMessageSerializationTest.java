@@ -1,12 +1,6 @@
 package com.w1nlin4n.practice3.serialization;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.w1nlin4n.practice3.cryptography.CryptographyHandler;
-import com.w1nlin4n.practice3.cryptography.RedundancyCheckHandler;
-import com.w1nlin4n.practice3.dto.ExampleDto;
-import com.w1nlin4n.practice3.networking.message.Message;
-import com.w1nlin4n.practice3.networking.message.MessageCommand;
 import com.w1nlin4n.practice3.cryptography.CryptographyHandler;
 import com.w1nlin4n.practice3.cryptography.RedundancyCheckHandler;
 import com.w1nlin4n.practice3.dto.ExampleDto;

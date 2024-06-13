@@ -7,9 +7,6 @@ import com.w1nlin4n.practice3.controllers.Endpoint;
 import com.w1nlin4n.practice3.database.ProductsDB;
 import com.w1nlin4n.practice3.networking.message.Message;
 import com.w1nlin4n.practice3.networking.message.MessageCommand;
-import com.w1nlin4n.practice3.controllers.Controller;
-import com.w1nlin4n.practice3.controllers.Endpoint;
-import com.w1nlin4n.practice3.networking.message.MessageCommand;
 import org.reflections.Reflections;
 
 import java.lang.reflect.InvocationTargetException;

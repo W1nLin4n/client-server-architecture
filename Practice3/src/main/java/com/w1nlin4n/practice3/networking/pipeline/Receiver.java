@@ -5,8 +5,6 @@ import com.w1nlin4n.practice3.networking.message.MessageCommand;
 import com.w1nlin4n.practice3.networking.packet.Packet;
 import com.w1nlin4n.practice3.serialization.Deserializer;
 import com.w1nlin4n.practice3.serialization.Serializer;
-import com.w1nlin4n.practice3.serialization.Deserializer;
-import com.w1nlin4n.practice3.serialization.Serializer;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
