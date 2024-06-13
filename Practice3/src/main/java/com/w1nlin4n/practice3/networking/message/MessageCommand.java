@@ -1,7 +1,6 @@
 package com.w1nlin4n.practice3.networking.message;
 
 public enum MessageCommand {
-    CLOSE_CONNECTION,
     INFORMATION,
     ERROR,
     CREATE_PRODUCT,
