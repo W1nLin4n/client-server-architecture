@@ -37,7 +37,7 @@ class DefaultPacketSerializationTest {
 
     @Test
     void not_empty_packet_serialization() {
-        Packet packet = new Packet((byte) 12, 1023910923L, new Message(MessageCommand.INFORMATION, 993, "Hello World!"));
+        Packet packet = new Packet((byte) 12, 1023910923L, new Message(MessageCommand.SUCCESS, 993, "Hello World!"));
         byte[] serialized = packetSerializer.serialize(packet);
         Packet deserialized = packetDeserializer.deserialize(serialized);
         assertEquals(packet, deserialized);
@@ -48,7 +48,7 @@ class DefaultPacketSerializationTest {
         ExampleDto teacher = new ExampleDto("Vlad", 35, null, null);
         ExampleDto student = new ExampleDto("Ivan", 14, new int[]{12, 10, 11, 12}, teacher);
 
-        Packet packet = new Packet((byte) 12, 1023910923L, new Message(MessageCommand.INFORMATION, 993, student.toJson()));
+        Packet packet = new Packet((byte) 12, 1023910923L, new Message(MessageCommand.SUCCESS, 993, student.toJson()));
         byte[] serialized = packetSerializer.serialize(packet);
         Packet deserialized = packetDeserializer.deserialize(serialized);
         assertEquals(packet, deserialized);

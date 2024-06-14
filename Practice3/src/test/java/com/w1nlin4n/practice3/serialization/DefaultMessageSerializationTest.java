@@ -36,7 +36,7 @@ class DefaultMessageSerializationTest {
 
     @Test
     void not_empty_message_serialization() {
-        Message message = new Message(MessageCommand.INFORMATION, 993, "Hello World!");
+        Message message = new Message(MessageCommand.SUCCESS, 993, "Hello World!");
         byte[] serialized = messageSerializer.serialize(message);
         Message deserialized = messageDeserializer.deserialize(serialized);
         assertEquals(message, deserialized);
@@ -47,7 +47,7 @@ class DefaultMessageSerializationTest {
         ExampleDto teacher = new ExampleDto("Vlad", 35, null, null);
         ExampleDto student = new ExampleDto("Ivan", 14, new int[]{12, 10, 11, 12}, teacher);
 
-        Message message = new Message(MessageCommand.INFORMATION, 993, student.toJson());
+        Message message = new Message(MessageCommand.SUCCESS, 993, student.toJson());
         byte[] serialized = messageSerializer.serialize(message);
         Message deserialized = messageDeserializer.deserialize(serialized);
         assertEquals(message, deserialized);
