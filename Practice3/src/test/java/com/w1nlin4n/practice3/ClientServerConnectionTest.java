@@ -8,13 +8,14 @@ import com.w1nlin4n.practice3.database.ProductsDB;
 import com.w1nlin4n.practice3.dto.ProductAmountChangeDto;
 import com.w1nlin4n.practice3.entities.Category;
 import com.w1nlin4n.practice3.entities.Product;
-import com.w1nlin4n.practice3.networking.connection.DefaultRequestListener;
+import com.w1nlin4n.practice3.networking.client.Client;
 import com.w1nlin4n.practice3.networking.message.Message;
 import com.w1nlin4n.practice3.networking.message.MessageCommand;
 import com.w1nlin4n.practice3.networking.packet.Packet;
 import com.w1nlin4n.practice3.networking.pipeline.Handler;
 import com.w1nlin4n.practice3.networking.pipeline.Receiver;
 import com.w1nlin4n.practice3.networking.pipeline.Sender;
+import com.w1nlin4n.practice3.networking.server.Server;
 import com.w1nlin4n.practice3.serialization.DefaultPacketDeserializer;
 import com.w1nlin4n.practice3.serialization.DefaultPacketSerializer;
 import com.w1nlin4n.practice3.serialization.Deserializer;
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,11 +34,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ServerTest {
+class ClientServerConnectionTest {
     ProductsDB productsDB;
     ExecutorService executorService;
     AtomicBoolean isRunning = new AtomicBoolean(false);
-    DefaultRequestListener requestListener;
     CryptographyHandler cryptographyHandler;
     RedundancyCheckHandler redundancyCheckHandler;
     Serializer<Packet> packetSerializer;
@@ -47,7 +48,7 @@ class ServerTest {
     Server server;
 
     @BeforeEach
-    void setUp() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    void setUp() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
         productsDB = new ProductsDB();
         Category category1 = new Category("Food", "these are what people eat");
         Category category2 = new Category("Drinks", "these are what people drink");
@@ -67,98 +68,109 @@ class ServerTest {
         productsDB.addProductToCategory("Water", "Drinks");
         executorService = Executors.newCachedThreadPool();
         isRunning = new AtomicBoolean(false);
-        requestListener = new DefaultRequestListener(isRunning);
         cryptographyHandler = new CryptographyHandler();
         redundancyCheckHandler = new RedundancyCheckHandler();
         packetSerializer = new DefaultPacketSerializer(cryptographyHandler, redundancyCheckHandler);
         packetDeserializer = new DefaultPacketDeserializer(cryptographyHandler, redundancyCheckHandler);
         handler = new Handler(productsDB);
-        sender = new Sender();
-        receiver = new Receiver(packetDeserializer, packetSerializer, handler, sender);
-        server = new Server(executorService, requestListener, receiver, isRunning);
+        sender = new Sender(packetSerializer);
+        receiver = new Receiver(packetDeserializer);
+        server = new Server(3333, executorService, receiver, handler, sender, isRunning);
     }
 
     @Test
-    void manyRequestsTest() throws InterruptedException {
+    void manyRequestsTest() throws InterruptedException, IOException {
         Thread serverThread = new Thread(() -> {
             try {
                 server.start();
-            } catch (InterruptedException e) {
+            } catch (InterruptedException | IOException e) {
                 throw new RuntimeException(e);
             }
         });
         serverThread.start();
         List<Thread> threads = new ArrayList<>();
+        List<Client> clients = new ArrayList<>();
         for(byte i = 0; i < 10; i++) {
-            byte finalI = i;
+            Client client = new Client("localhost", 3000 + i, "localhost", 3333, packetSerializer, receiver, sender);
+            clients.add(client);
             threads.add(new Thread(() -> {
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        for(byte j = 0; j < 10; j++) {
-                            Message message;
-                            try {
-                                message = new Message(
-                                        MessageCommand.ADD_PRODUCT_AMOUNT,
-                                        j,
-                                        objectMapper.writeValueAsString(
-                                                ProductAmountChangeDto
-                                                        .builder()
-                                                        .productAmount(10)
-                                                        .productName("Water")
-                                                        .build()
-                                        )
-                                );
-                            } catch (JsonProcessingException e) {
-                                throw new RuntimeException(e);
-                            }
-                            Packet packet = new Packet(
-                                    finalI,
-                                    0,
-                                    message
-                            );
-                            requestListener.addRequest(packetSerializer.serialize(packet));
-                        }
-                    })
-            );
+                try {
+                    client.start();
+                } catch (IOException | InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                ObjectMapper objectMapper = new ObjectMapper();
+                for(byte j = 0; j < 10; j++) {
+                    Message message;
+                    try {
+                        message = new Message(
+                                MessageCommand.ADD_PRODUCT_AMOUNT,
+                                j,
+                                objectMapper.writeValueAsString(
+                                        ProductAmountChangeDto
+                                                .builder()
+                                                .productAmount(10)
+                                                .productName("Water")
+                                                .build()
+                                )
+                        );
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    }
+                    try {
+                        client.sendMessage(message);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }));
         }
         for(byte i = 0; i < 10; i++) {
-            byte finalI = i;
+            Client client = new Client("localhost", 3010 + i, "localhost", 3333, packetSerializer, receiver, sender);
+            clients.add(client);
             threads.add(new Thread(() -> {
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        for(byte j = 0; j < 10; j++) {
-                            Message message;
-                            try {
-                                message = new Message(
-                                        MessageCommand.REMOVE_PRODUCT_AMOUNT,
-                                        j,
-                                        objectMapper.writeValueAsString(
-                                                ProductAmountChangeDto
-                                                        .builder()
-                                                        .productAmount(10)
-                                                        .productName("Water")
-                                                        .build()
-                                        )
-                                );
-                            } catch (JsonProcessingException e) {
-                                throw new RuntimeException(e);
-                            }
-                            Packet packet = new Packet(
-                                    finalI,
-                                    0,
-                                    message
-                            );
-                            requestListener.addRequest(packetSerializer.serialize(packet));
-                        }
-                    })
-            );
+                try {
+                    client.start();
+                } catch (IOException | InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                ObjectMapper objectMapper = new ObjectMapper();
+                for(byte j = 0; j < 10; j++) {
+                    Message message;
+                    try {
+                        message = new Message(
+                                MessageCommand.REMOVE_PRODUCT_AMOUNT,
+                                j,
+                                objectMapper.writeValueAsString(
+                                        ProductAmountChangeDto
+                                                .builder()
+                                                .productAmount(10)
+                                                .productName("Water")
+                                                .build()
+                                )
+                        );
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    }
+                    try {
+                        client.sendMessage(message);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }));
         }
         for(Thread thread : threads) {
             thread.start();
         }
-        for (Thread thread : threads) {
+        for(Thread thread : threads) {
             thread.join();
         }
         synchronized (this) {
             wait(2000);
+        }
+        for (Client client : clients) {
+            client.close();
         }
         server.stop();
         assertEquals(1000, productsDB.getProduct("Water").getAmount());
@@ -168,7 +180,6 @@ class ServerTest {
     void tearDown() {
         productsDB = null;
         executorService = null;
-        requestListener = null;
         cryptographyHandler = null;
         redundancyCheckHandler = null;
         packetSerializer = null;
