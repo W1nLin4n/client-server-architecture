@@ -1,7 +1,9 @@
 package com.w1nlin4n.practice3.networking.message;
 
 public enum MessageCommand {
-    INFORMATION,
+    ESTABLISH_CONNECTION,
+    CLOSE_CONNECTION,
+    SUCCESS,
     ERROR,
     CREATE_PRODUCT,
     GET_PRODUCT,
