@@ -22,7 +22,7 @@ public class Handler {
     public Handler(ProductsDB productsDB) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         endpoints = new HashMap<>();
         controllers = new HashMap<>();
-        Reflections reflections = new Reflections("com.w1nlin4n.homework2");
+        Reflections reflections = new Reflections("com.w1nlin4n.practice3");
         Set<Class<?>> classes = reflections.getTypesAnnotatedWith(Controller.class);
         for (Class<?> clazz : classes) {
             Controller controller = clazz.getAnnotation(Controller.class);
@@ -56,6 +56,6 @@ public class Handler {
         Object returnResult = method.invoke(controllerInstance,
                 objectMapper.readValue(message.getBody(), endpoint.dto())
         );
-        return new Message(MessageCommand.INFORMATION, message.getUserId(), objectMapper.writeValueAsString(returnResult));
+        return new Message(MessageCommand.SUCCESS, message.getUserId(), objectMapper.writeValueAsString(returnResult));
     }
 }
