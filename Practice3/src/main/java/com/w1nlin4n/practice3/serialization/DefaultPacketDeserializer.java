@@ -34,7 +34,7 @@ public class DefaultPacketDeserializer implements Deserializer<Packet> {
 
         int packetLength = ByteBuffer.wrap(Arrays.copyOfRange(packetBytes, 10, 14)).order(ByteOrder.BIG_ENDIAN).getInt();
 
-        if(messageBytes.length - 2 != packetLength)
+        if(messageBytes.length != packetLength)
             throw new SerializationException("Incorrect packet length provided", null);
 
         byte sourceId = ByteBuffer.wrap(Arrays.copyOfRange(packetBytes, 1, 2)).order(ByteOrder.BIG_ENDIAN).get();

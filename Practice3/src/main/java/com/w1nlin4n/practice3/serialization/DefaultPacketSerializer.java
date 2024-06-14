@@ -21,9 +21,8 @@ public class DefaultPacketSerializer implements Serializer<Packet> {
         Serializer<Message> messageSerializer = new DefaultMessageSerializer(cryptographyHandler, redundancyCheckHandler);
         byte[] messageBytes = messageSerializer.serialize(obj.getMessage());
 
-        byte[] packetBytes = ByteBuffer.allocate(14).order(ByteOrder.BIG_ENDIAN).put(magicConst).put(obj.getSourceId()).putLong(obj.getPacketId()).putInt(messageBytes.length - 2).array();
+        byte[] packetBytes = ByteBuffer.allocate(14).order(ByteOrder.BIG_ENDIAN).put(magicConst).put(obj.getSourceId()).putLong(obj.getPacketId()).putInt(messageBytes.length).array();
 
         return ByteBuffer.allocate(16 + messageBytes.length).order(ByteOrder.BIG_ENDIAN).put(packetBytes).putShort(redundancyCheckHandler.encode(packetBytes)).put(messageBytes).array();
-
     }
 }
