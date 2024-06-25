@@ -1,7 +1,6 @@
 package com.w1nlin4n.practice5.database;
 
 import com.w1nlin4n.practice5.exceptions.DatabaseException;
-import com.w1nlin4n.practice5.exceptions.DatabaseException;
 
 import java.io.File;
 import java.io.IOException;

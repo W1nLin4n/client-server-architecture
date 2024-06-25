@@ -7,13 +7,6 @@ import com.w1nlin4n.practice5.entities.Category;
 import com.w1nlin4n.practice5.entities.Product;
 import com.w1nlin4n.practice5.exceptions.DatabaseException;
 import com.w1nlin4n.practice5.exceptions.LogicException;
-import com.w1nlin4n.practice5.database.ProductsDB;
-import com.w1nlin4n.practice5.dto.ProductAmountChangeDto;
-import com.w1nlin4n.practice5.dto.ProductDto;
-import com.w1nlin4n.practice5.entities.Category;
-import com.w1nlin4n.practice5.entities.Product;
-import com.w1nlin4n.practice5.exceptions.DatabaseException;
-import com.w1nlin4n.practice5.exceptions.LogicException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +14,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ProductServiceTest {
     ProductsDB productsDB;

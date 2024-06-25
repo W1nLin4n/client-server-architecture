@@ -2,8 +2,6 @@ package com.w1nlin4n.practice5.networking.pipeline;
 
 import com.w1nlin4n.practice5.networking.packet.Packet;
 import com.w1nlin4n.practice5.serialization.Serializer;
-import com.w1nlin4n.practice5.networking.packet.Packet;
-import com.w1nlin4n.practice5.serialization.Serializer;
 import lombok.AllArgsConstructor;
 
 import java.io.IOException;

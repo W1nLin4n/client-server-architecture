@@ -1,7 +1,6 @@
 package com.w1nlin4n.practice5.dto;
 
 import com.w1nlin4n.practice5.entities.Category;
-import com.w1nlin4n.practice5.entities.Category;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

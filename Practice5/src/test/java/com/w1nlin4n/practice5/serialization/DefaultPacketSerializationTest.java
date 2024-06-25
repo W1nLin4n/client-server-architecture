@@ -7,7 +7,6 @@ import com.w1nlin4n.practice5.dto.ExampleDto;
 import com.w1nlin4n.practice5.networking.message.Message;
 import com.w1nlin4n.practice5.networking.message.MessageCommand;
 import com.w1nlin4n.practice5.networking.packet.Packet;
-import com.w1nlin4n.practice5.networking.packet.Packet;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

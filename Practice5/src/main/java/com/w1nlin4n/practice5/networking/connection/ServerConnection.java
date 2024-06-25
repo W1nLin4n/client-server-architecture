@@ -6,8 +6,6 @@ import com.w1nlin4n.practice5.networking.packet.Packet;
 import com.w1nlin4n.practice5.networking.pipeline.Handler;
 import com.w1nlin4n.practice5.networking.pipeline.Receiver;
 import com.w1nlin4n.practice5.networking.pipeline.Sender;
-import com.w1nlin4n.practice5.networking.packet.Packet;
-import com.w1nlin4n.practice5.networking.pipeline.Receiver;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;

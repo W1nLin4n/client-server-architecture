@@ -20,10 +20,6 @@ import com.w1nlin4n.practice5.serialization.DefaultPacketDeserializer;
 import com.w1nlin4n.practice5.serialization.DefaultPacketSerializer;
 import com.w1nlin4n.practice5.serialization.Deserializer;
 import com.w1nlin4n.practice5.serialization.Serializer;
-import com.w1nlin4n.practice5.entities.Category;
-import com.w1nlin4n.practice5.entities.Product;
-import com.w1nlin4n.practice5.networking.client.Client;
-import com.w1nlin4n.practice5.networking.packet.Packet;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,7 +32,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ClientServerConnectionTest {
     ProductsDB productsDB;

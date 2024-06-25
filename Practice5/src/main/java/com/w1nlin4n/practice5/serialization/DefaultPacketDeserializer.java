@@ -5,8 +5,6 @@ import com.w1nlin4n.practice5.cryptography.RedundancyCheckHandler;
 import com.w1nlin4n.practice5.exceptions.SerializationException;
 import com.w1nlin4n.practice5.networking.message.Message;
 import com.w1nlin4n.practice5.networking.packet.Packet;
-import com.w1nlin4n.practice5.exceptions.SerializationException;
-import com.w1nlin4n.practice5.networking.packet.Packet;
 import lombok.AllArgsConstructor;
 
 import java.nio.ByteBuffer;

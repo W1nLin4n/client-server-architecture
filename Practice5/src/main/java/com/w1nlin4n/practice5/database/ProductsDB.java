@@ -4,9 +4,6 @@ package com.w1nlin4n.practice5.database;
 import com.w1nlin4n.practice5.entities.Category;
 import com.w1nlin4n.practice5.entities.Product;
 import com.w1nlin4n.practice5.exceptions.DatabaseException;
-import com.w1nlin4n.practice5.entities.Category;
-import com.w1nlin4n.practice5.entities.Product;
-import com.w1nlin4n.practice5.exceptions.DatabaseException;
 
 import java.sql.*;
 import java.util.ArrayList;

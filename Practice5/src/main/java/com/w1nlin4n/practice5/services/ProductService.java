@@ -5,7 +5,6 @@ import com.w1nlin4n.practice5.dto.ProductAmountChangeDto;
 import com.w1nlin4n.practice5.dto.ProductDto;
 import com.w1nlin4n.practice5.entities.Product;
 import com.w1nlin4n.practice5.exceptions.LogicException;
-import com.w1nlin4n.practice5.exceptions.LogicException;
 import lombok.AllArgsConstructor;
 
 import java.util.ArrayList;
