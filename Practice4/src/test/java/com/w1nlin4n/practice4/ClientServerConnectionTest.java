@@ -49,7 +49,7 @@ class ClientServerConnectionTest {
 
     @BeforeEach
     void setUp() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
-        productsDB = new ProductsDB();
+        productsDB = new ProductsDB("jdbc:sqlite::memory:");
         Category category1 = new Category("Food", "these are what people eat");
         Category category2 = new Category("Drinks", "these are what people drink");
         Product product1 = new Product("Pizza", "italian food", "Italy", 20, 12.5);
