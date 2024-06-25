@@ -3,162 +3,368 @@ package com.w1nlin4n.practice4.database;
 
 import com.w1nlin4n.practice4.entities.Category;
 import com.w1nlin4n.practice4.entities.Product;
-import lombok.Synchronized;
+import com.w1nlin4n.practice4.exceptions.DatabaseException;
 
+import java.sql.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
-public class ProductsDB extends Database {
+public class ProductsDB {
+    private final Connection connection;
 
-    public ProductsDB() {
-        super("store", new HashMap<>());
-        createTable("product");
-        createTable("category");
-        createTable("product_category");
+    public ProductsDB(String dbUrl) {
+        try {
+            connection = DriverManager.getConnection(dbUrl);
+            connection.setAutoCommit(false);
+        } catch (SQLException e) {
+            throw new DatabaseException("Could not connect to the database", e);
+        }
+        MigrationsManager migrationsManager = new MigrationsManager(connection);
+        migrationsManager.migrate();
     }
 
-    @Synchronized
     public void createCategory(Category category) {
-        Table table = getTable("category");
-        HashMap<String, Object> values = new HashMap<>();
-        values.put("name", category.getName());
-        values.put("description", category.getDescription());
-        Row row = new Row(category.getName(), values);
-        table.insertRow(row);
-    }
-
-    @Synchronized
-    public Category getCategory(String categoryName) {
-        Table table = getTable("category");
-        Row row = table.getRow(categoryName);
-        HashMap<String, Object> values = row.getValues();
-        return Category
-                .builder()
-                .name((String) values.get("name"))
-                .description((String) values.get("description"))
-                .build();
-    }
-
-    @Synchronized
-    public void updateCategory(Category category) {
-        Table table = getTable("category");
-        HashMap<String, Object> values = new HashMap<>();
-        values.put("name", category.getName());
-        values.put("description", category.getDescription());
-        Row row = new Row(category.getName(), values);
-        table.updateRow(row);
-    }
-
-    @Synchronized
-    public void deleteCategory(String categoryName) {
-        Table table = getTable("category");
-        table.deleteRow(categoryName);
-        List<Product> products = getAllProductsFromCategory(categoryName);
-        for (Product product : products) {
-            deleteProduct(product.getName());
+        synchronized (connection) {
+            try (Statement statement = connection.createStatement()) {
+                String sql =
+                        "INSERT INTO category (" +
+                            "name, " +
+                            "description" +
+                        ") " +
+                        "VALUES ('" +
+                            category.getName() + "', '" +
+                            category.getDescription() +
+                        "');";
+                statement.executeUpdate(sql);
+                connection.commit();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not create category", e);
+            }
         }
     }
 
-    @Synchronized
+    public Category getCategory(String categoryName) {
+        Category category;
+        synchronized (connection) {
+            try {
+                Statement statement = connection.createStatement();
+                String sql =
+                        "SELECT * " +
+                        "FROM category " +
+                        "WHERE name = '" + categoryName + "';";
+                ResultSet result = statement.executeQuery(sql);
+                if(!result.next())
+                    throw new DatabaseException("Could not find a category with such name", null);
+                category = Category
+                        .builder()
+                        .name(result.getString("name"))
+                        .description(result.getString("description"))
+                        .build();
+                statement.close();
+                connection.commit();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not get category", e);
+            }
+        }
+        return category;
+    }
+
+    public void updateCategory(Category category) {
+        synchronized (connection) {
+            try {
+                Statement statement = connection.createStatement();
+                String sql =
+                        "UPDATE category " +
+                        "SET " +
+                            "name = '" + category.getName() + "', " +
+                            "description = '" + category.getDescription() + "' " +
+                        "WHERE name = '" + category.getName() + "';";
+                statement.executeUpdate(sql);
+                statement.close();
+                connection.commit();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not update category", e);
+            }
+        }
+    }
+
+    public void deleteCategory(String categoryName) {
+        synchronized (connection) {
+            try {
+                Statement statement = connection.createStatement();
+                String sql =
+                        "DELETE FROM product " +
+                        "WHERE name IN (" +
+                            "SELECT product " +
+                            "FROM product_category " +
+                            "WHERE category = '" + categoryName + "'" +
+                        ");";
+                statement.executeUpdate(sql);
+                statement.close();
+                statement = connection.createStatement();
+                sql =
+                        "DELETE FROM category " +
+                        "WHERE name = '" + categoryName + "';";
+                statement.executeUpdate(sql);
+                statement.close();
+                connection.commit();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not delete category", e);
+            }
+        }
+    }
+
     public List<Category> getAllCategories() {
-        Table table = getTable("category");
         List<Category> categories = new ArrayList<>();
-        for (Row row : table.getRows().values()) {
-            Category category = Category
-                    .builder()
-                    .name((String) row.getValues().get("name"))
-                    .description((String) row.getValues().get("description"))
-                    .build();
-            categories.add(category);
+        synchronized (connection) {
+            try {
+                Statement statement = connection.createStatement();
+                String sql =
+                        "SELECT * " +
+                        "FROM category;";
+                ResultSet result = statement.executeQuery(sql);
+                while (result.next()) {
+                    Category category = Category
+                            .builder()
+                            .name(result.getString("name"))
+                            .description(result.getString("description"))
+                            .build();
+                    categories.add(category);
+                }
+                statement.close();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not get all categories", e);
+            }
         }
         return categories;
     }
 
-    @Synchronized
     public void createProduct(Product product) {
-        Table table = getTable("product");
-        HashMap<String, Object> values = new HashMap<>();
-        values.put("name", product.getName());
-        values.put("description", product.getDescription());
-        values.put("manufacturer", product.getManufacturer());
-        values.put("amount", product.getAmount());
-        values.put("price", product.getPrice());
-        Row row = new Row(product.getName(), values);
-        table.insertRow(row);
+        synchronized (connection) {
+            try (Statement statement = connection.createStatement()) {
+                String sql =
+                        "INSERT INTO product (" +
+                            "name, " +
+                            "description, " +
+                            "manufacturer, " +
+                            "amount, " +
+                            "price" +
+                        ") " +
+                        "VALUES ('" +
+                            product.getName() + "', '" +
+                            product.getDescription() + "', '" +
+                            product.getManufacturer() + "', '" +
+                            product.getAmount() + "', '" +
+                            product.getPrice() +
+                        "');";
+                statement.executeUpdate(sql);
+                connection.commit();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not create product", e);
+            }
+        }
     }
 
-    @Synchronized
     public Product getProduct(String productName) {
-        Table table = getTable("product");
-        Row row = table.getRow(productName);
-        HashMap<String, Object> values = row.getValues();
-        return Product
-                .builder()
-                .name((String) values.get("name"))
-                .description((String) values.get("description"))
-                .manufacturer((String) values.get("manufacturer"))
-                .amount((Integer) values.get("amount"))
-                .price((Double) values.get("price"))
-                .build();
+        Product product;
+        synchronized (connection) {
+            try {
+                Statement statement = connection.createStatement();
+                String sql =
+                        "SELECT * " +
+                        "FROM product " +
+                        "WHERE name = '" + productName + "';";
+                ResultSet result = statement.executeQuery(sql);
+                if(!result.next())
+                    throw new DatabaseException("Could not find a product with such name", null);
+                product = Product
+                        .builder()
+                        .name(result.getString("name"))
+                        .description(result.getString("description"))
+                        .manufacturer(result.getString("manufacturer"))
+                        .amount(result.getInt("amount"))
+                        .price(result.getDouble("price"))
+                        .build();
+                statement.close();
+                connection.commit();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not get product", e);
+            }
+        }
+        return product;
     }
 
-    @Synchronized
     public void updateProduct(Product product) {
-        Table table = getTable("product");
-        HashMap<String, Object> values = new HashMap<>();
-        values.put("name", product.getName());
-        values.put("description", product.getDescription());
-        values.put("manufacturer", product.getManufacturer());
-        values.put("amount", product.getAmount());
-        values.put("price", product.getPrice());
-        Row row = new Row(product.getName(), values);
-        table.updateRow(row);
+        synchronized (connection) {
+            try {
+                Statement statement = connection.createStatement();
+                String sql =
+                        "UPDATE product " +
+                        "SET " +
+                            "name = '" + product.getName() + "', " +
+                            "description = '" + product.getDescription() + "', " +
+                            "manufacturer = '" + product.getManufacturer() + "', " +
+                            "amount = '" + product.getAmount() + "', " +
+                            "price = '" + product.getPrice() + "' " +
+                        "WHERE name = '" + product.getName() + "';";
+                statement.executeUpdate(sql);
+                statement.close();
+                connection.commit();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not update product", e);
+            }
+        }
     }
 
-    @Synchronized
     public void deleteProduct(String productName) {
-        Table table = getTable("product");
-        table.deleteRow(productName);
-        Table product_category = getTable("product_category");
-        product_category.deleteRow(productName);
+        synchronized (connection) {
+            try {
+                Statement statement = connection.createStatement();
+                String sql =
+                        "DELETE FROM product " +
+                        "WHERE name = '" + productName + "';";
+                statement.executeUpdate(sql);
+                statement.close();
+                connection.commit();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not delete product", e);
+            }
+        }
     }
 
-    @Synchronized
     public List<Product> getAllProducts() {
-        Table table = getTable("product");
         List<Product> products = new ArrayList<>();
-        for (Row row : table.getRows().values()) {
-            Product product = Product
-                    .builder()
-                    .name((String) row.getValues().get("name"))
-                    .description((String) row.getValues().get("description"))
-                    .manufacturer((String) row.getValues().get("manufacturer"))
-                    .amount((Integer) row.getValues().get("amount"))
-                    .price((Double) row.getValues().get("price"))
-                    .build();
-            products.add(product);
+        synchronized (connection) {
+            try {
+                Statement statement = connection.createStatement();
+                String sql =
+                        "SELECT * " +
+                        "FROM product;";
+                ResultSet result = statement.executeQuery(sql);
+                while (result.next()) {
+                    Product product = Product
+                            .builder()
+                            .name(result.getString("name"))
+                            .description(result.getString("description"))
+                            .manufacturer(result.getString("manufacturer"))
+                            .amount(result.getInt("amount"))
+                            .price(result.getDouble("price"))
+                            .build();
+                    products.add(product);
+                }
+                statement.close();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not get all products", e);
+            }
         }
         return products;
     }
 
-    @Synchronized
     public void addProductToCategory(String productName, String categoryName) {
-        Table table = getTable("product_category");
-        HashMap<String, Object> values = new HashMap<>();
-        values.put("product", productName);
-        values.put("category", categoryName);
-        Row row = new Row(productName, values);
-        table.insertRow(row);
+        synchronized (connection) {
+            try (Statement statement = connection.createStatement()) {
+                String sql =
+                        "INSERT INTO product_category (" +
+                            "product, " +
+                            "category" +
+                        ") " +
+                        "VALUES ('" +
+                            productName + "', '" +
+                            categoryName +
+                        "');";
+                statement.executeUpdate(sql);
+                connection.commit();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not add product to category", e);
+            }
+        }
     }
 
-    @Synchronized
     public List<Product> getAllProductsFromCategory(String categoryName) {
-        Table table = getTable("product_category");
         List<Product> products = new ArrayList<>();
-        for(Row row : table.getRows().values()) {
-            if(row.getValues().get("category").equals(categoryName)) {
-                products.add(getProduct((String) row.getValues().get("product")));
+        synchronized (connection) {
+            try {
+                Statement statement = connection.createStatement();
+                String sql =
+                        "SELECT p.* " +
+                        "FROM product p " +
+                        "INNER JOIN product_category pc ON p.name = pc.product " +
+                        "WHERE pc.category = '" + categoryName + "';";
+                ResultSet result = statement.executeQuery(sql);
+                while (result.next()) {
+                    Product product = Product
+                            .builder()
+                            .name(result.getString("name"))
+                            .description(result.getString("description"))
+                            .manufacturer(result.getString("manufacturer"))
+                            .amount(result.getInt("amount"))
+                            .price(result.getDouble("price"))
+                            .build();
+                    products.add(product);
+                }
+                statement.close();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not get all products", e);
             }
         }
         return products;
