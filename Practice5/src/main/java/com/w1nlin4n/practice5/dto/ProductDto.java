@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class ProductDto {
+    private Integer id;
+    private Integer categoryId;
     private String name;
     private String description;
     private String manufacturer;
@@ -20,6 +22,8 @@ public class ProductDto {
     public Product toProduct() {
         return Product
                 .builder()
+                .id(id)
+                .categoryId(categoryId)
                 .name(name)
                 .description(description)
                 .manufacturer(manufacturer)
@@ -31,6 +35,8 @@ public class ProductDto {
     public static ProductDto fromProduct(Product product) {
         return ProductDto
                 .builder()
+                .id(product.getId())
+                .categoryId(product.getCategoryId())
                 .name(product.getName())
                 .description(product.getDescription())
                 .manufacturer(product.getManufacturer())

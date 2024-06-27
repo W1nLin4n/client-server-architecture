@@ -11,12 +11,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class CategoryDto {
+    private Integer id;
     private String name;
     private String description;
 
     public Category toCategory() {
         return Category
                 .builder()
+                .id(id)
                 .name(name)
                 .description(description)
                 .build();
@@ -25,6 +27,7 @@ public class CategoryDto {
     public static CategoryDto fromCategory(Category category) {
         return CategoryDto
                 .builder()
+                .id(category.getId())
                 .name(category.getName())
                 .description(category.getDescription())
                 .build();
