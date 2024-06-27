@@ -1,7 +1,6 @@
 package com.w1nlin4n.practice5.services;
 
 import com.w1nlin4n.practice5.database.ProductsDB;
-import com.w1nlin4n.practice5.dto.AddProductToCategoryDto;
 import com.w1nlin4n.practice5.dto.CategoryDto;
 import com.w1nlin4n.practice5.dto.ProductDto;
 import com.w1nlin4n.practice5.entities.Category;
@@ -19,25 +18,25 @@ public class CategoryService {
         productsDB.createCategory(category.toCategory());
     }
 
-    public CategoryDto getCategory(String categoryName) {
-        return CategoryDto.fromCategory(productsDB.getCategory(categoryName));
+    public CategoryDto getCategory(Integer id) {
+        return CategoryDto.fromCategory(productsDB.getCategory(id));
     }
 
-    public void updateCategory(CategoryDto category) {
-        productsDB.updateCategory(category.toCategory());
+    public CategoryDto getCategoryByName(String name) {
+        return CategoryDto.fromCategory(productsDB.getCategoryByName(name));
     }
 
-    public void deleteCategory(String categoryName) {
-        productsDB.deleteCategory(categoryName);
+    public void updateCategory(Integer id, CategoryDto category) {
+        productsDB.updateCategory(id, category.toCategory());
     }
 
-    public void addProductToCategory(AddProductToCategoryDto addProductToCategoryDto) {
-        productsDB.addProductToCategory(addProductToCategoryDto.getProductName(), addProductToCategoryDto.getCategoryName());
+    public void deleteCategory(Integer id) {
+        productsDB.deleteCategory(id);
     }
 
-    public List<ProductDto> getAllProductsFromCategory(String categoryName) {
+    public List<ProductDto> getAllProductsFromCategory(Integer id) {
         List<ProductDto> result = new ArrayList<>();
-        for (Product product : productsDB.getAllProductsFromCategory(categoryName)) {
+        for (Product product : productsDB.getAllProductsFromCategory(id)) {
             result.add(ProductDto.fromProduct(product));
         }
         return result;

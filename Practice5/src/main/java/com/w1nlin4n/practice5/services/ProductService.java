@@ -1,7 +1,6 @@
 package com.w1nlin4n.practice5.services;
 
 import com.w1nlin4n.practice5.database.ProductsDB;
-import com.w1nlin4n.practice5.dto.ProductAmountChangeDto;
 import com.w1nlin4n.practice5.dto.ProductDto;
 import com.w1nlin4n.practice5.entities.Product;
 import com.w1nlin4n.practice5.exceptions.LogicException;
@@ -22,37 +21,41 @@ public class ProductService {
         productsDB.createProduct(product.toProduct());
     }
 
-    public ProductDto getProduct(String productName) {
-        return ProductDto.fromProduct(productsDB.getProduct(productName));
+    public ProductDto getProduct(Integer id) {
+        return ProductDto.fromProduct(productsDB.getProduct(id));
     }
 
-    public void updateProduct(ProductDto product) {
+    public ProductDto getProductByName(String name) {
+        return ProductDto.fromProduct(productsDB.getProductByName(name));
+    }
+
+    public void updateProduct(Integer id, ProductDto product) {
         if (product.getAmount() < 0)
             throw new LogicException("Product amount cannot be negative", null);
         if (product.getPrice() < 0)
             throw new LogicException("Product price cannot be negative", null);
-        productsDB.updateProduct(product.toProduct());
+        productsDB.updateProduct(id, product.toProduct());
     }
 
-    public void deleteProduct(String productName) {
-        productsDB.deleteProduct(productName);
+    public void deleteProduct(Integer id) {
+        productsDB.deleteProduct(id);
     }
 
-    public void addAmountToProduct(ProductAmountChangeDto productAmountChangeDto) {
+    public void addAmountToProduct(Integer id, Integer amount) {
         synchronized (productsDB) {
-            Product product = productsDB.getProduct(productAmountChangeDto.getProductName());
-            product.setAmount(product.getAmount() + productAmountChangeDto.getProductAmount());
-            productsDB.updateProduct(product);
+            Product product = productsDB.getProduct(id);
+            product.setAmount(product.getAmount() + amount);
+            productsDB.updateProduct(id, product);
         }
     }
 
-    public void removeAmountFromProduct(ProductAmountChangeDto productAmountChangeDto) {
+    public void removeAmountFromProduct(Integer id, Integer amount) {
         synchronized (productsDB) {
-            Product product = productsDB.getProduct(productAmountChangeDto.getProductName());
-            product.setAmount(product.getAmount() - productAmountChangeDto.getProductAmount());
+            Product product = productsDB.getProduct(id);
+            product.setAmount(product.getAmount() - amount);
             if (product.getAmount() < 0)
                 throw new LogicException("Product amount cannot be negative", null);
-            productsDB.updateProduct(product);
+            productsDB.updateProduct(id, product);
         }
     }
 
