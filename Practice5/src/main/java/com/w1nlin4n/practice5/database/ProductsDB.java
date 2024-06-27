@@ -48,7 +48,7 @@ public class ProductsDB {
         }
     }
 
-    public Category getCategory(String categoryName) {
+    public Category getCategory(Integer id) {
         Category category;
         synchronized (connection) {
             try {
@@ -56,12 +56,13 @@ public class ProductsDB {
                 String sql =
                         "SELECT * " +
                         "FROM category " +
-                        "WHERE name = '" + categoryName + "';";
+                        "WHERE id = " + id + ";";
                 ResultSet result = statement.executeQuery(sql);
                 if(!result.next())
-                    throw new DatabaseException("Could not find a category with such name", null);
+                    throw new DatabaseException("Could not find a category with such id", null);
                 category = Category
                         .builder()
+                        .id(result.getInt("id"))
                         .name(result.getString("name"))
                         .description(result.getString("description"))
                         .build();
@@ -79,7 +80,39 @@ public class ProductsDB {
         return category;
     }
 
-    public void updateCategory(Category category) {
+    public Category getCategoryByName(String name) {
+        Category category;
+        synchronized (connection) {
+            try {
+                Statement statement = connection.createStatement();
+                String sql =
+                        "SELECT * " +
+                        "FROM category " +
+                        "WHERE name = '" + name + "';";
+                ResultSet result = statement.executeQuery(sql);
+                if(!result.next())
+                    throw new DatabaseException("Could not find a category with such name", null);
+                category = Category
+                        .builder()
+                        .id(result.getInt("id"))
+                        .name(result.getString("name"))
+                        .description(result.getString("description"))
+                        .build();
+                statement.close();
+                connection.commit();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not get category", e);
+            }
+        }
+        return category;
+    }
+
+    public void updateCategory(Integer id, Category category) {
         synchronized (connection) {
             try {
                 Statement statement = connection.createStatement();
@@ -88,7 +121,7 @@ public class ProductsDB {
                         "SET " +
                             "name = '" + category.getName() + "', " +
                             "description = '" + category.getDescription() + "' " +
-                        "WHERE name = '" + category.getName() + "';";
+                        "WHERE id = " + id + ";";
                 statement.executeUpdate(sql);
                 statement.close();
                 connection.commit();
@@ -103,23 +136,13 @@ public class ProductsDB {
         }
     }
 
-    public void deleteCategory(String categoryName) {
+    public void deleteCategory(Integer id) {
         synchronized (connection) {
             try {
                 Statement statement = connection.createStatement();
                 String sql =
-                        "DELETE FROM product " +
-                        "WHERE name IN (" +
-                            "SELECT product " +
-                            "FROM product_category " +
-                            "WHERE category = '" + categoryName + "'" +
-                        ");";
-                statement.executeUpdate(sql);
-                statement.close();
-                statement = connection.createStatement();
-                sql =
                         "DELETE FROM category " +
-                        "WHERE name = '" + categoryName + "';";
+                        "WHERE id = " + id + ";";
                 statement.executeUpdate(sql);
                 statement.close();
                 connection.commit();
@@ -134,6 +157,42 @@ public class ProductsDB {
         }
     }
 
+    public List<Product> getAllProductsFromCategory(Integer id) {
+        List<Product> products = new ArrayList<>();
+        synchronized (connection) {
+            try {
+                Statement statement = connection.createStatement();
+                String sql =
+                        "SELECT * " +
+                        "FROM product " +
+                        "WHERE category_id = " + id + ";";
+                ResultSet result = statement.executeQuery(sql);
+                while (result.next()) {
+                    Product product = Product
+                            .builder()
+                            .id(result.getInt("id"))
+                            .categoryId(result.getInt("category_id"))
+                            .name(result.getString("name"))
+                            .description(result.getString("description"))
+                            .manufacturer(result.getString("manufacturer"))
+                            .amount(result.getInt("amount"))
+                            .price(result.getDouble("price"))
+                            .build();
+                    products.add(product);
+                }
+                statement.close();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not get all products", e);
+            }
+        }
+        return products;
+    }
+
     public List<Category> getAllCategories() {
         List<Category> categories = new ArrayList<>();
         synchronized (connection) {
@@ -146,6 +205,7 @@ public class ProductsDB {
                 while (result.next()) {
                     Category category = Category
                             .builder()
+                            .id(result.getInt("id"))
                             .name(result.getString("name"))
                             .description(result.getString("description"))
                             .build();
@@ -169,19 +229,23 @@ public class ProductsDB {
             try (Statement statement = connection.createStatement()) {
                 String sql =
                         "INSERT INTO product (" +
+                            "category_id, " +
                             "name, " +
                             "description, " +
                             "manufacturer, " +
                             "amount, " +
                             "price" +
                         ") " +
-                        "VALUES ('" +
+                        "VALUES (" +
+                            product.getCategoryId() + ", '" +
                             product.getName() + "', '" +
                             product.getDescription() + "', '" +
                             product.getManufacturer() + "', '" +
                             product.getAmount() + "', '" +
+                            product.getManufacturer() + "', " +
+                            product.getAmount() + ", " +
                             product.getPrice() +
-                        "');";
+                        ");";
                 statement.executeUpdate(sql);
                 connection.commit();
             } catch (SQLException e) {
@@ -195,7 +259,7 @@ public class ProductsDB {
         }
     }
 
-    public Product getProduct(String productName) {
+    public Product getProduct(Integer id) {
         Product product;
         synchronized (connection) {
             try {
@@ -203,12 +267,14 @@ public class ProductsDB {
                 String sql =
                         "SELECT * " +
                         "FROM product " +
-                        "WHERE name = '" + productName + "';";
+                        "WHERE id = " + id + ";";
                 ResultSet result = statement.executeQuery(sql);
                 if(!result.next())
-                    throw new DatabaseException("Could not find a product with such name", null);
+                    throw new DatabaseException("Could not find a product with such id", null);
                 product = Product
                         .builder()
+                        .id(result.getInt("id"))
+                        .categoryId(result.getInt("category_id"))
                         .name(result.getString("name"))
                         .description(result.getString("description"))
                         .manufacturer(result.getString("manufacturer"))
@@ -229,7 +295,43 @@ public class ProductsDB {
         return product;
     }
 
-    public void updateProduct(Product product) {
+    public Product getProductByName(String name) {
+        Product product;
+        synchronized (connection) {
+            try {
+                Statement statement = connection.createStatement();
+                String sql =
+                        "SELECT * " +
+                        "FROM product " +
+                        "WHERE name = '" + name + "';";
+                ResultSet result = statement.executeQuery(sql);
+                if(!result.next())
+                    throw new DatabaseException("Could not find a product with such name", null);
+                product = Product
+                        .builder()
+                        .id(result.getInt("id"))
+                        .categoryId(result.getInt("category_id"))
+                        .name(result.getString("name"))
+                        .description(result.getString("description"))
+                        .manufacturer(result.getString("manufacturer"))
+                        .amount(result.getInt("amount"))
+                        .price(result.getDouble("price"))
+                        .build();
+                statement.close();
+                connection.commit();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not get product", e);
+            }
+        }
+        return product;
+    }
+
+    public void updateProduct(Integer id, Product product) {
         synchronized (connection) {
             try {
                 Statement statement = connection.createStatement();
@@ -239,9 +341,9 @@ public class ProductsDB {
                             "name = '" + product.getName() + "', " +
                             "description = '" + product.getDescription() + "', " +
                             "manufacturer = '" + product.getManufacturer() + "', " +
-                            "amount = '" + product.getAmount() + "', " +
-                            "price = '" + product.getPrice() + "' " +
-                        "WHERE name = '" + product.getName() + "';";
+                            "amount = " + product.getAmount() + ", " +
+                            "price = " + product.getPrice() + " " +
+                        "WHERE id = " + id + ";";
                 statement.executeUpdate(sql);
                 statement.close();
                 connection.commit();
@@ -256,13 +358,13 @@ public class ProductsDB {
         }
     }
 
-    public void deleteProduct(String productName) {
+    public void deleteProduct(Integer id) {
         synchronized (connection) {
             try {
                 Statement statement = connection.createStatement();
                 String sql =
                         "DELETE FROM product " +
-                        "WHERE name = '" + productName + "';";
+                        "WHERE id = " + id + ";";
                 statement.executeUpdate(sql);
                 statement.close();
                 connection.commit();
@@ -289,66 +391,8 @@ public class ProductsDB {
                 while (result.next()) {
                     Product product = Product
                             .builder()
-                            .name(result.getString("name"))
-                            .description(result.getString("description"))
-                            .manufacturer(result.getString("manufacturer"))
-                            .amount(result.getInt("amount"))
-                            .price(result.getDouble("price"))
-                            .build();
-                    products.add(product);
-                }
-                statement.close();
-            } catch (SQLException e) {
-                try {
-                    connection.rollback();
-                } catch (SQLException e1) {
-                    throw new DatabaseException("Could not rollback transaction", e1);
-                }
-                throw new DatabaseException("Could not get all products", e);
-            }
-        }
-        return products;
-    }
-
-    public void addProductToCategory(String productName, String categoryName) {
-        synchronized (connection) {
-            try (Statement statement = connection.createStatement()) {
-                String sql =
-                        "INSERT INTO product_category (" +
-                            "product, " +
-                            "category" +
-                        ") " +
-                        "VALUES ('" +
-                            productName + "', '" +
-                            categoryName +
-                        "');";
-                statement.executeUpdate(sql);
-                connection.commit();
-            } catch (SQLException e) {
-                try {
-                    connection.rollback();
-                } catch (SQLException e1) {
-                    throw new DatabaseException("Could not rollback transaction", e1);
-                }
-                throw new DatabaseException("Could not add product to category", e);
-            }
-        }
-    }
-
-    public List<Product> getAllProductsFromCategory(String categoryName) {
-        List<Product> products = new ArrayList<>();
-        synchronized (connection) {
-            try {
-                Statement statement = connection.createStatement();
-                String sql =
-                        "SELECT p.* " +
-                        "FROM product p " +
-                        "INNER JOIN product_category pc ON p.name = pc.product " +
-                        "WHERE pc.category = '" + categoryName + "';";
-                ResultSet result = statement.executeQuery(sql);
-                while (result.next()) {
-                    Product product = Product
-                            .builder()
+                            .id(result.getInt("id"))
+                            .categoryId(result.getInt("category_id"))
                             .name(result.getString("name"))
                             .description(result.getString("description"))
                             .manufacturer(result.getString("manufacturer"))
