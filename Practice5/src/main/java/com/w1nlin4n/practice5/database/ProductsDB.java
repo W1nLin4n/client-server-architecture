@@ -3,6 +3,7 @@ package com.w1nlin4n.practice5.database;
 
 import com.w1nlin4n.practice5.entities.Category;
 import com.w1nlin4n.practice5.entities.Product;
+import com.w1nlin4n.practice5.entities.User;
 import com.w1nlin4n.practice5.exceptions.DatabaseException;
 
 import java.sql.*;
@@ -21,6 +22,177 @@ public class ProductsDB {
         }
         MigrationsManager migrationsManager = new MigrationsManager(connection);
         migrationsManager.migrate();
+    }
+
+    public void createUser(User user) {
+        synchronized (connection) {
+            try (Statement statement = connection.createStatement()) {
+                String sql =
+                        "INSERT INTO user (" +
+                            "username, " +
+                            "password_hash, " +
+                            "access_level" +
+                        ") " +
+                        "VALUES ('" +
+                            user.getUsername() + "', '" +
+                            user.getPasswordHash() + "', '" +
+                            user.getAccessLevel() +
+                        "')";
+                statement.executeUpdate(sql);
+                connection.commit();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not create user", e);
+            }
+        }
+    }
+
+    public User getUser(Integer id) {
+        User user;
+        synchronized (connection) {
+            try {
+                Statement statement = connection.createStatement();
+                String sql =
+                        "SELECT * " +
+                        "FROM user " +
+                        "WHERE id = " + id + ";";
+                ResultSet result = statement.executeQuery(sql);
+                if(!result.next())
+                    throw new DatabaseException("Could not find a user with such id", null);
+                user = User
+                        .builder()
+                        .id(result.getInt("id"))
+                        .username(result.getString("username"))
+                        .passwordHash(result.getString("password_hash"))
+                        .accessLevel(result.getString("access_level"))
+                        .build();
+                statement.close();
+                connection.commit();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not get user", e);
+            }
+        }
+        return user;
+    }
+
+    public User getUserByUsername(String username) {
+        User user;
+        synchronized (connection) {
+            try {
+                Statement statement = connection.createStatement();
+                String sql =
+                        "SELECT * " +
+                        "FROM user " +
+                        "WHERE username = '" + username + "';";
+                ResultSet result = statement.executeQuery(sql);
+                if(!result.next())
+                    throw new DatabaseException("Could not find a user with such username", null);
+                user = User
+                        .builder()
+                        .id(result.getInt("id"))
+                        .username(result.getString("username"))
+                        .passwordHash(result.getString("password_hash"))
+                        .accessLevel(result.getString("access_level"))
+                        .build();
+                statement.close();
+                connection.commit();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not get user", e);
+            }
+        }
+        return user;
+    }
+
+    public void updateUser(Integer id, User user) {
+        synchronized (connection) {
+            try {
+                Statement statement = connection.createStatement();
+                String sql =
+                        "UPDATE user " +
+                        "SET " +
+                            "username = '" + user.getUsername() + "', " +
+                            "password_hash = '" + user.getPasswordHash() + "', " +
+                            "access_level = '" + user.getAccessLevel() + "' " +
+                        "WHERE id = " + id + ";";
+                statement.executeUpdate(sql);
+                statement.close();
+                connection.commit();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not update user", e);
+            }
+        }
+    }
+
+    public void deleteUser(Integer id) {
+        synchronized (connection) {
+            try {
+                Statement statement = connection.createStatement();
+                String sql =
+                        "DELETE FROM user " +
+                        "WHERE id = " + id + ";";
+                statement.executeUpdate(sql);
+                statement.close();
+                connection.commit();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not delete user", e);
+            }
+        }
+    }
+
+    public List<User> getAllUsers() {
+        List<User> users = new ArrayList<>();
+        synchronized (connection) {
+            try {
+                Statement statement = connection.createStatement();
+                String sql =
+                        "SELECT * " +
+                        "FROM user;";
+                ResultSet result = statement.executeQuery(sql);
+                while (result.next()) {
+                    User user = User
+                            .builder()
+                            .id(result.getInt("id"))
+                            .username(result.getString("username"))
+                            .passwordHash(result.getString("password_hash"))
+                            .accessLevel(result.getString("access_level"))
+                            .build();
+                    users.add(user);
+                }
+                statement.close();
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e1) {
+                    throw new DatabaseException("Could not rollback transaction", e1);
+                }
+                throw new DatabaseException("Could not get all categories", e);
+            }
+        }
+        return users;
     }
 
     public void createCategory(Category category) {
@@ -240,8 +412,6 @@ public class ProductsDB {
                             product.getCategoryId() + ", '" +
                             product.getName() + "', '" +
                             product.getDescription() + "', '" +
-                            product.getManufacturer() + "', '" +
-                            product.getAmount() + "', '" +
                             product.getManufacturer() + "', " +
                             product.getAmount() + ", " +
                             product.getPrice() +
