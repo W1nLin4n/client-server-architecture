@@ -4,7 +4,10 @@ import com.w1nlin4n.project.exceptions.DatabaseException;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -69,11 +72,20 @@ public class MigrationsManager {
     }
 
     private File[] getAllMigrations() {
-        File migrationsDirectory = new File("./src/main/resources/migrations");
-        File[] migrationsList = migrationsDirectory.listFiles();
-        if (migrationsList == null)
+        ClassLoader classLoader = getClass().getClassLoader();
+
+        URL resource = classLoader.getResource("migrations");
+
+        try {
+            File[] migrationsList = Files
+                    .walk(Paths.get(resource.toURI()))
+                    .filter(Files::isRegularFile)
+                    .map(Path::toFile)
+                    .toArray(File[]::new);
+            return migrationsList;
+        } catch (Exception e) {
             return new File[0];
-        return migrationsList;
+        }
     }
 
     private void applyMigration(File file) throws SQLException, IOException {
