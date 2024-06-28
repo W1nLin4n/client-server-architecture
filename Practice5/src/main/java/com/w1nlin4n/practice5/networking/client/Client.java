@@ -1,131 +1,68 @@
 package com.w1nlin4n.practice5.networking.client;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.w1nlin4n.practice5.networking.message.Message;
-import com.w1nlin4n.practice5.networking.message.MessageCommand;
-import com.w1nlin4n.practice5.networking.packet.Packet;
-import com.w1nlin4n.practice5.networking.pipeline.Receiver;
-import com.w1nlin4n.practice5.networking.pipeline.Sender;
-import com.w1nlin4n.practice5.serialization.Serializer;
+import com.w1nlin4n.practice5.networking.HttpCode;
+import com.w1nlin4n.practice5.networking.message.Request;
+import com.w1nlin4n.practice5.networking.message.Response;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
-import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Client {
-    private byte id;
-    private final String clientAddress;
-    private final int clientPort;
     private final String serverAddress;
     private final int serverPort;
-    private SocketChannel channel;
-    private Selector selector;
-    private final AtomicInteger packetId;
-    private final Serializer<Packet> serializer;
-    private final Receiver receiver;
-    private final Sender sender;
+    private final AtomicBoolean isRunning;
+    private final HttpClient client;
 
-    public Client(String clientAddress, int clientPort, String serverAddress, int serverPort, Serializer<Packet> serializer, Receiver receiver, Sender sender) {
-        this.clientAddress = clientAddress;
-        this.clientPort = clientPort;
+    public Client(String clientAddress, int clientPort, String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
-        packetId = new AtomicInteger(0);
-        this.serializer = serializer;
-        this.receiver = receiver;
-        this.sender = sender;
+        this.isRunning = new AtomicBoolean(false);
+
+        client = HttpClient
+                .newBuilder()
+                .localAddress(new InetSocketAddress(clientAddress, clientPort).getAddress())
+                .version(HttpClient.Version.HTTP_1_1)
+                .connectTimeout(Duration.ofSeconds(20))
+                .build()
+        ;
     }
 
-    public synchronized void start() throws IOException, InterruptedException {
-        channel = SocketChannel.open();
-        channel.configureBlocking(false);
-        channel.bind(new InetSocketAddress(clientAddress, clientPort));
-
-        selector = Selector.open();
-        channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-        channel.connect(new InetSocketAddress(serverAddress, serverPort));
-
-        boolean channelConnected = false;
-        int delay = 10;
-
-        while (!channelConnected) {
-            wait(delay);
-
-            channelConnected = channel.finishConnect();
-
-            delay = Math.min(delay * 2, 1000);
-        }
-
-        System.out.println("Client connected to server: " + channel);
-
-        boolean connected = false;
-        delay = 10;
-
-        while (!connected) {
-            wait(delay);
-
-            Message response = sendMessage(new Message(MessageCommand.ESTABLISH_CONNECTION, Integer.MAX_VALUE, ""));
-            if (response.getCommand() == MessageCommand.ESTABLISH_CONNECTION) {
-                id = Byte.parseByte(response.getBody());
-                connected = true;
-            }
-
-            delay = Math.min(delay * 2, 1000);
-        }
+    public void start() {
+        isRunning.set(true);
     }
 
-    public synchronized Message sendMessage(Message message) throws IOException {
-        boolean done = false;
-        boolean written = false;
+    public Response send(Request request) throws IOException, InterruptedException {
+        if (!isRunning.get())
+            throw new IllegalStateException("Client is not running");
 
-        Packet request = new Packet(id, packetId.getAndIncrement(), message);
-        Packet response = null;
-
-        while (!done) {
-            selector.select();
-            Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
-            while (iterator.hasNext()) {
-                SelectionKey key = iterator.next();
-                iterator.remove();
-
-                if (key.isReadable() && written) {
-                    response = receiver.receivePacket(channel);
-                    ObjectMapper om = new ObjectMapper();
-                    System.out.println("Response: " + om.writeValueAsString(response));
-                    done = true;
-                }
-
-                if (key.isWritable() && !written) {
-                    ObjectMapper om = new ObjectMapper();
-                    System.out.println("Request: " + om.writeValueAsString(request));
-                    sender.sendPacket(request, channel);
-                    written = true;
-                }
-            }
+        HttpRequest.Builder httpRequestBuilder = HttpRequest
+                .newBuilder(URI.create("http://" + serverAddress + ":" + serverPort + request.getPath()))
+                .version(HttpClient.Version.HTTP_1_1);
+        if (request.getAccessToken() != null)
+            httpRequestBuilder.header("Authorization", request.getAccessToken());
+        if (request.getBody() == null) {
+            httpRequestBuilder.method(request.getMethod().name(), HttpRequest.BodyPublishers.noBody());
+        } else {
+            httpRequestBuilder
+                    .header("Content-Type", "application/json")
+                    .method(request.getMethod().name(), HttpRequest.BodyPublishers.ofString(request.getBody()));
         }
-        return response.getMessage();
+        HttpRequest httpRequest = httpRequestBuilder.build();
+        HttpResponse<String> httpResponse = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+        return new Response(
+                HttpCode.fromCode(httpResponse.statusCode()),
+                httpResponse.body()
+        );
     }
 
-    public synchronized void close() throws IOException, InterruptedException {
-        boolean closed = false;
-        int delay = 10;
-
-        while (!closed) {
-            wait(delay);
-
-            Message response = sendMessage(new Message(MessageCommand.CLOSE_CONNECTION, Integer.MAX_VALUE, Integer.toString(id)));
-            if (response.getCommand() == MessageCommand.CLOSE_CONNECTION) {
-                closed = true;
-            }
-
-            delay = Math.min(delay * 2, 1000);
-        }
-
-        System.out.println("Client disconnected from server: " + channel);
-        channel.close();
+    public void stop() {
+        isRunning.set(false);
+        client.close();
     }
 }
