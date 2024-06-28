@@ -10,6 +10,7 @@ import com.w1nlin4n.project.controllers.endpoint.params.Body;
 import com.w1nlin4n.project.controllers.endpoint.params.Path;
 import com.w1nlin4n.project.controllers.security.AccessLevel;
 import com.w1nlin4n.project.controllers.security.Security;
+import com.w1nlin4n.project.controllers.security.params.Token;
 import com.w1nlin4n.project.database.ProductsDB;
 import com.w1nlin4n.project.dto.UserDto;
 import com.w1nlin4n.project.exceptions.ProcessingException;
@@ -61,10 +62,11 @@ public class Handler implements HttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
         HttpMethod method = HttpMethod.valueOf(exchange.getRequestMethod());
-        AccessLevel accessLevel = accessLevelFromToken(exchange.getRequestHeaders().getFirst("Authorization"));
+        String accessToken = exchange.getRequestHeaders().getFirst("Authorization");
+        AccessLevel accessLevel = accessLevelFromToken(accessToken);
 
         List<Method> applicableEndpoints = findApplicableEndpoints(endpoints, path, method);
-        Method usedEndpoint = findUsedEndpoint(applicableEndpoints, path);
+        Method usedEndpoint = findUsedEndpoint(applicableEndpoints);
 
         if (usedEndpoint == null) {
             exchange.sendResponseHeaders(HttpCode.NOT_FOUND.code, 0);
@@ -89,7 +91,7 @@ public class Handler implements HttpHandler {
 
         Object[] processedParameters;
         try {
-            processedParameters = processParameters(usedEndpoint, exchange.getRequestBody(), path);
+            processedParameters = processParameters(usedEndpoint, exchange.getRequestBody(), path, accessToken);
         } catch (ProcessingException e) {
             exchange.sendResponseHeaders(HttpCode.INTERNAL_SERVER_ERROR.code, -1);
             exchange.close();
@@ -151,7 +153,7 @@ public class Handler implements HttpHandler {
         return applicableEndpoints;
     }
 
-    private Method findUsedEndpoint(List<Method> applicableEndpoints, String path) {
+    private Method findUsedEndpoint(List<Method> applicableEndpoints) {
         Method usedEndpoint = null;
         for (Method endpoint : applicableEndpoints) {
             if (usedEndpoint == null) {
@@ -159,7 +161,7 @@ public class Handler implements HttpHandler {
                 continue;
             }
 
-            Endpoint usedEndpointAnnotation = endpoint.getAnnotation(Endpoint.class);
+            Endpoint usedEndpointAnnotation = usedEndpoint.getAnnotation(Endpoint.class);
             Endpoint endpointAnnotation = endpoint.getAnnotation(Endpoint.class);
             if (patternSpecificity(endpointAnnotation.path()) > patternSpecificity(usedEndpointAnnotation.path()))
                 usedEndpoint = endpoint;
@@ -193,7 +195,7 @@ public class Handler implements HttpHandler {
         return count;
     }
 
-    private Object[] processParameters(Method usedEndpoint, InputStream body, String path) {
+    private Object[] processParameters(Method usedEndpoint, InputStream body, String path, String accessToken) {
         Endpoint usedEndpointAnnotation = usedEndpoint.getAnnotation(Endpoint.class);
         Annotation[][] parameterAnnotations = usedEndpoint.getParameterAnnotations();
         Class<?>[] parameterTypes = usedEndpoint.getParameterTypes();
@@ -218,6 +220,10 @@ public class Handler implements HttpHandler {
                     } catch (Exception e) {
                         throw new ProcessingException("Could not process request body", e);
                     }
+                }
+
+                if (annotation instanceof Token) {
+                    processedParameters[i] = accessToken;
                 }
             }
         }
