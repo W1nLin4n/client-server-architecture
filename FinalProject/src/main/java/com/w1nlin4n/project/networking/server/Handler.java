@@ -99,7 +99,7 @@ public class Handler implements HttpHandler {
         Object responseBody;
         try {
             responseBody = usedEndpoint.invoke(controllers.get(usedEndpoint.getDeclaringClass()), processedParameters);
-        } catch (IllegalAccessException | InvocationTargetException e) {
+        } catch (IllegalAccessException e) {
             exchange.sendResponseHeaders(HttpCode.INTERNAL_SERVER_ERROR.code, -1);
             exchange.close();
             return;
