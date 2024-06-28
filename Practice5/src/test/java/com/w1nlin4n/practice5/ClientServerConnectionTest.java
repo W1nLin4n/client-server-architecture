@@ -2,24 +2,19 @@ package com.w1nlin4n.practice5;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.w1nlin4n.practice5.cryptography.CryptographyHandler;
-import com.w1nlin4n.practice5.cryptography.RedundancyCheckHandler;
+import com.w1nlin4n.practice5.controllers.security.AccessLevel;
 import com.w1nlin4n.practice5.database.ProductsDB;
-import com.w1nlin4n.practice5.dto.ProductAmountChangeDto;
+import com.w1nlin4n.practice5.dto.LoginDto;
+import com.w1nlin4n.practice5.dto.UserDto;
 import com.w1nlin4n.practice5.entities.Category;
 import com.w1nlin4n.practice5.entities.Product;
-import com.w1nlin4n.practice5.networking.client.Client;
-import com.w1nlin4n.practice5.networking.message.Message;
-import com.w1nlin4n.practice5.networking.message.MessageCommand;
-import com.w1nlin4n.practice5.networking.packet.Packet;
-import com.w1nlin4n.practice5.networking.pipeline.Handler;
-import com.w1nlin4n.practice5.networking.pipeline.Receiver;
-import com.w1nlin4n.practice5.networking.pipeline.Sender;
+import com.w1nlin4n.practice5.networking.HttpMethod;
+import com.w1nlin4n.practice5.networking.message.Request;
+import com.w1nlin4n.practice5.networking.message.Response;
+import com.w1nlin4n.practice5.networking.server.Handler;
 import com.w1nlin4n.practice5.networking.server.Server;
-import com.w1nlin4n.practice5.serialization.DefaultPacketDeserializer;
-import com.w1nlin4n.practice5.serialization.DefaultPacketSerializer;
-import com.w1nlin4n.practice5.serialization.Deserializer;
-import com.w1nlin4n.practice5.serialization.Serializer;
+import com.w1nlin4n.practice5.networking.client.Client;
+import com.w1nlin4n.practice5.services.AuthService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,52 +25,83 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ClientServerConnectionTest {
     ProductsDB productsDB;
     ExecutorService executorService;
-    AtomicBoolean isRunning = new AtomicBoolean(false);
-    CryptographyHandler cryptographyHandler;
-    RedundancyCheckHandler redundancyCheckHandler;
-    Serializer<Packet> packetSerializer;
-    Deserializer<Packet> packetDeserializer;
     Handler handler;
-    Sender sender;
-    Receiver receiver;
     Server server;
 
     @BeforeEach
     void setUp() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException {
         productsDB = new ProductsDB("jdbc:sqlite::memory:");
-        Category category1 = new Category("Food", "these are what people eat");
-        Category category2 = new Category("Drinks", "these are what people drink");
-        Product product1 = new Product("Pizza", "italian food", "Italy", 20, 12.5);
-        Product product2 = new Product("Sushi", "japanese food", "Japan", 10, 10.);
-        Product product3 = new Product("Wine", "alcohol drink", "France", 30, 13.);
-        Product product4 = new Product("Water", "regular drink", "Ukraine", 1000, 5.);
+        Category category1 = Category
+                .builder()
+                .name("Food")
+                .description("these are what people eat")
+                .build();
+        Category category2 = Category
+                .builder()
+                .name("Drinks")
+                .description("these are what people drink")
+                .build();
+        Product product1 = Product
+                .builder()
+                .name("Pizza")
+                .description("italian food")
+                .manufacturer("Italy")
+                .amount(20)
+                .price(12.5)
+                .build();
+        Product product2 = Product
+                .builder()
+                .name("Sushi")
+                .description("japanese food")
+                .manufacturer("Japan")
+                .amount(10)
+                .price(10.)
+                .build();
+        Product product3 = Product
+                .builder()
+                .name("Whine")
+                .description("alcohol drink")
+                .manufacturer("France")
+                .amount(30)
+                .price(13.)
+                .build();
+        Product product4 = Product
+                .builder()
+                .name("Water")
+                .description("regular drink")
+                .manufacturer("Ukraine")
+                .amount(1000)
+                .price(5.)
+                .build();
         productsDB.createCategory(category1);
         productsDB.createCategory(category2);
+        Integer category1Id = productsDB.getCategoryByName("Food").getId();
+        Integer category2Id = productsDB.getCategoryByName("Drinks").getId();
+        product1.setCategoryId(category1Id);
+        product2.setCategoryId(category1Id);
+        product3.setCategoryId(category2Id);
+        product4.setCategoryId(category2Id);
         productsDB.createProduct(product1);
         productsDB.createProduct(product2);
         productsDB.createProduct(product3);
         productsDB.createProduct(product4);
-        productsDB.addProductToCategory("Pizza", "Food");
-        productsDB.addProductToCategory("Sushi", "Food");
-        productsDB.addProductToCategory("Wine", "Drinks");
-        productsDB.addProductToCategory("Water", "Drinks");
+        AuthService authService = new AuthService(productsDB);
+        UserDto userDto = UserDto
+                .builder()
+                .username("user")
+                .passwordHash("8AC76453D769D4FD14B3F41AD4933F9BD64321972CD002DE9B847E117435B08B")
+                .accessLevel(AccessLevel.USER.name())
+                .build();
+        authService.createUser(userDto);
         executorService = Executors.newCachedThreadPool();
-        isRunning = new AtomicBoolean(false);
-        cryptographyHandler = new CryptographyHandler();
-        redundancyCheckHandler = new RedundancyCheckHandler();
-        packetSerializer = new DefaultPacketSerializer(cryptographyHandler, redundancyCheckHandler);
-        packetDeserializer = new DefaultPacketDeserializer(cryptographyHandler, redundancyCheckHandler);
         handler = new Handler(productsDB);
-        sender = new Sender(packetSerializer);
-        receiver = new Receiver(packetDeserializer);
-        server = new Server(3333, executorService, receiver, handler, sender, isRunning);
+        server = new Server(3333, executorService, handler);
     }
 
     @Test
@@ -91,70 +117,72 @@ class ClientServerConnectionTest {
         List<Thread> threads = new ArrayList<>();
         List<Client> clients = new ArrayList<>();
         for(byte i = 0; i < 10; i++) {
-            Client client = new Client("localhost", 3000 + i, "localhost", 3333, packetSerializer, receiver, sender);
+            Client client = new Client("localhost", 3000 + i, "localhost", 3333);
             clients.add(client);
             threads.add(new Thread(() -> {
+                client.start();
+                ObjectMapper objectMapper = new ObjectMapper();
+                LoginDto loginDto = new LoginDto("user", "8AC76453D769D4FD14B3F41AD4933F9BD64321972CD002DE9B847E117435B08B");
+                String loginBody;
                 try {
-                    client.start();
-                } catch (IOException | InterruptedException e) {
+                    loginBody = objectMapper.writeValueAsString(loginDto);
+                } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }
-                ObjectMapper objectMapper = new ObjectMapper();
+                Request loginRequest = new Request(HttpMethod.POST, "/auth/login", loginBody, null);
+                Response loginResponse;
+                try {
+                    loginResponse = client.send(loginRequest);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                String accessToken;
+                try {
+                    accessToken = objectMapper.readValue(loginResponse.getBody(), String.class);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
                 for(byte j = 0; j < 10; j++) {
-                    Message message;
+                    Request request = new Request(HttpMethod.PUT, "/product/" + productsDB.getProductByName("Water").getId() + "/add/10", null, accessToken);
                     try {
-                        message = new Message(
-                                MessageCommand.ADD_PRODUCT_AMOUNT,
-                                j,
-                                objectMapper.writeValueAsString(
-                                        ProductAmountChangeDto
-                                                .builder()
-                                                .productAmount(10)
-                                                .productName("Water")
-                                                .build()
-                                )
-                        );
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
-                    try {
-                        client.sendMessage(message);
-                    } catch (IOException e) {
+                        client.send(request);
+                    } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 }
             }));
         }
         for(byte i = 0; i < 10; i++) {
-            Client client = new Client("localhost", 3010 + i, "localhost", 3333, packetSerializer, receiver, sender);
+            Client client = new Client("localhost", 3010 + i, "localhost", 3333);
             clients.add(client);
             threads.add(new Thread(() -> {
+                client.start();
+                ObjectMapper objectMapper = new ObjectMapper();
+                LoginDto loginDto = new LoginDto("user", "8AC76453D769D4FD14B3F41AD4933F9BD64321972CD002DE9B847E117435B08B");
+                String loginBody;
                 try {
-                    client.start();
-                } catch (IOException | InterruptedException e) {
+                    loginBody = objectMapper.writeValueAsString(loginDto);
+                } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }
-                ObjectMapper objectMapper = new ObjectMapper();
+                Request loginRequest = new Request(HttpMethod.POST, "/auth/login", loginBody, null);
+                Response loginResponse;
+                try {
+                    loginResponse = client.send(loginRequest);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                String accessToken;
+                try {
+                    accessToken = objectMapper.readValue(loginResponse.getBody(), String.class);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
                 for(byte j = 0; j < 10; j++) {
-                    Message message;
+                    Request request = new Request(HttpMethod.PUT, "/product/" + productsDB.getProductByName("Water").getId() + "/remove/10", null, accessToken);
                     try {
-                        message = new Message(
-                                MessageCommand.REMOVE_PRODUCT_AMOUNT,
-                                j,
-                                objectMapper.writeValueAsString(
-                                        ProductAmountChangeDto
-                                                .builder()
-                                                .productAmount(10)
-                                                .productName("Water")
-                                                .build()
-                                )
-                        );
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
-                    try {
-                        client.sendMessage(message);
-                    } catch (IOException e) {
+                        client.send(request);
+                    } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 }
@@ -170,23 +198,17 @@ class ClientServerConnectionTest {
             wait(2000);
         }
         for (Client client : clients) {
-            client.close();
+            client.stop();
         }
         server.stop();
-        assertEquals(1000, productsDB.getProduct("Water").getAmount());
+        assertEquals(1000, productsDB.getProductByName("Water").getAmount());
     }
 
     @AfterEach
     void tearDown() {
         productsDB = null;
         executorService = null;
-        cryptographyHandler = null;
-        redundancyCheckHandler = null;
-        packetSerializer = null;
-        packetDeserializer = null;
         handler = null;
-        sender = null;
-        receiver = null;
         server = null;
     }
 }
