@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.w1nlin4n.project.viewcontrollers.login.LoginViewController">
+   <children>
+      <VBox alignment="CENTER">
+         <children>
+            <Label text="Login">
+               <font>
+                  <Font size="48.0" />
+               </font>
+               <VBox.margin>
+                  <Insets bottom="20.0" />
+               </VBox.margin>
+            </Label>
+            <VBox>
+               <children>
+                  <Label text="Username">
+                     <font>
+                        <Font size="24.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="usernameField" pickOnBounds="false" promptText="John Doe">
+                     <font>
+                        <Font size="24.0" />
+                     </font>
+                  </TextField>
+               </children>
+            </VBox>
+            <VBox>
+               <children>
+                  <Label text="Password">
+                     <font>
+                        <Font size="24.0" />
+                     </font>
+                  </Label>
+                  <PasswordField fx:id="passwordField" promptText="********">
+                     <font>
+                        <Font size="24.0" />
+                     </font>
+                  </PasswordField>
+               </children>
+            </VBox>
+            <Button mnemonicParsing="false" onAction="#submit" text="Submit">
+               <font>
+                  <Font size="24.0" />
+               </font>
+               <VBox.margin>
+                  <Insets top="20.0" />
+               </VBox.margin>
+            </Button>
+         </children>
+         <padding>
+            <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+         </padding>
+      </VBox>
+   </children>
+</Pane>
