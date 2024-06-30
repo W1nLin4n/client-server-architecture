@@ -92,6 +92,7 @@ public class ProductCreateViewController {
         controller.setProperties(properties);
         controller.setContentPane(contentPane);
         controller.setCategoryId(categoryId);
+        controller.setupProducts();
         contentPane.getChildren().clear();
         contentPane.getChildren().add(root);
     }
