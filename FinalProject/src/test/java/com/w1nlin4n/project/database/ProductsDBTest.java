@@ -49,7 +49,7 @@ class ProductsDBTest {
                 .build();
         Product product3 = Product
                 .builder()
-                .name("Whine")
+                .name("Wine")
                 .description("alcohol drink")
                 .manufacturer("France")
                 .amount(30)
@@ -310,7 +310,7 @@ class ProductsDBTest {
                                 .builder()
                                 .id(null)
                                 .categoryId(productsDB.getCategoryByName("Drinks").getId())
-                                .name("Whine")
+                                .name("Wine")
                                 .description("alcohol drink")
                                 .manufacturer("France")
                                 .amount(30)

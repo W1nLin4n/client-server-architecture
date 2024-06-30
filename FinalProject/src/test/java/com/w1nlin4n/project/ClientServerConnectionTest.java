@@ -9,11 +9,11 @@ import com.w1nlin4n.project.dto.UserDto;
 import com.w1nlin4n.project.entities.Category;
 import com.w1nlin4n.project.entities.Product;
 import com.w1nlin4n.project.networking.HttpMethod;
+import com.w1nlin4n.project.networking.client.Client;
 import com.w1nlin4n.project.networking.message.Request;
 import com.w1nlin4n.project.networking.message.Response;
 import com.w1nlin4n.project.networking.server.Handler;
 import com.w1nlin4n.project.networking.server.Server;
-import com.w1nlin4n.project.networking.client.Client;
 import com.w1nlin4n.project.services.AuthService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -26,8 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ClientServerConnectionTest {
     ProductsDB productsDB;
@@ -66,7 +64,7 @@ class ClientServerConnectionTest {
                 .build();
         Product product3 = Product
                 .builder()
-                .name("Whine")
+                .name("Wine")
                 .description("alcohol drink")
                 .manufacturer("France")
                 .amount(30)

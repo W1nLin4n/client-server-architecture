@@ -53,7 +53,7 @@ class ProductServiceTest {
                 .build();
         Product product3 = Product
                 .builder()
-                .name("Whine")
+                .name("Wine")
                 .description("alcohol drink")
                 .manufacturer("France")
                 .amount(30)
@@ -227,7 +227,7 @@ class ProductServiceTest {
                                 .builder()
                                 .id(null)
                                 .categoryId(categoryService.getCategoryByName("Drinks").getId())
-                                .name("Whine")
+                                .name("Wine")
                                 .description("alcohol drink")
                                 .manufacturer("France")
                                 .amount(30)

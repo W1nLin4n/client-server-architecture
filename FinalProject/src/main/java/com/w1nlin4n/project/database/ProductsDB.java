@@ -5,6 +5,7 @@ import com.w1nlin4n.project.entities.Category;
 import com.w1nlin4n.project.entities.Product;
 import com.w1nlin4n.project.entities.User;
 import com.w1nlin4n.project.exceptions.DatabaseException;
+import org.sqlite.SQLiteConfig;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -15,7 +16,9 @@ public class ProductsDB {
 
     public ProductsDB(String dbUrl) {
         try {
-            connection = DriverManager.getConnection(dbUrl);
+            SQLiteConfig config = new SQLiteConfig();
+            config.enforceForeignKeys(true);
+            connection = DriverManager.getConnection(dbUrl, config.toProperties());
             connection.setAutoCommit(false);
         } catch (SQLException e) {
             throw new DatabaseException("Could not connect to the database", e);
