@@ -76,7 +76,6 @@ public class ProductsViewController {
         ObjectMapper mapper = new ObjectMapper();
         productDtoList = Arrays.asList(mapper.readValue(response.getBody(), ProductDto[].class));
         filteredProductDtoList = List.copyOf(productDtoList);
-        System.out.println(filteredProductDtoList);
         renderPage();
         pagination.currentPageIndexProperty().addListener((observable, oldValue, newValue) -> {
             try {
