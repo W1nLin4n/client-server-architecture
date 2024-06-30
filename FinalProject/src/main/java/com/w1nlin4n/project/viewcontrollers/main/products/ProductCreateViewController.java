@@ -6,6 +6,7 @@ import com.w1nlin4n.project.networking.HttpCode;
 import com.w1nlin4n.project.networking.HttpMethod;
 import com.w1nlin4n.project.networking.message.Request;
 import com.w1nlin4n.project.networking.message.Response;
+import com.w1nlin4n.project.utility.Validator;
 import com.w1nlin4n.project.viewcontrollers.properties.Properties;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -43,6 +44,22 @@ public class ProductCreateViewController {
 
     @FXML
     private void createProduct() throws Exception {
+        if (!Validator.validateInteger(amountField.getText())) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("ERROR");
+            alert.setHeaderText("Product creation error");
+            alert.setContentText("Product amount must be a valid integer");
+            alert.showAndWait();
+            return;
+        }
+        if (!Validator.validateDouble(priceField.getText())) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("ERROR");
+            alert.setHeaderText("Product creation error");
+            alert.setContentText("Product price must be a valid number");
+            alert.showAndWait();
+            return;
+        }
         ProductDto productDto = ProductDto
                 .builder()
                 .name(nameField.getText())
